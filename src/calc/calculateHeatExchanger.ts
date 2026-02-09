@@ -54,9 +54,41 @@ export function calculateHeatExchanger(inputs: HeatExchangerInputs): HeatExchang
 }
 
 /**
- * Обратный расчёт: задано Tg2, найти Tg1.
- * Tg2 = Tg1 - Q/(mg*C*1000), Q = (Tg1-Tx1)*K, K = min(mg*C*1000, FK/2).
+ * Обратный расчёт: задано Tg2, Tg1 зафиксирована — найти Gg.
+ * Q = mg*C*1000*(Tg1-Tg2), при ограничении теплопередачи Q = FK*(Tg1-Tx1)/2.
  */
+export function solveGgFromTg2(
+  Tg2: number,
+  Tg1: number,
+  Tx1: number,
+  _Gx: number
+): number {
+  if (Tg2 >= Tg1) return 0.5;
+  const K = FK / 2;
+  const Q = K * (Tg1 - Tx1);
+  const mg = Q / (C * 1000 * (Tg1 - Tg2));
+  const Gg = (mg * 3600) / RHO;
+  return Math.max(0.5, Math.min(20, Math.round(Gg * 10) / 10));
+}
+
+/**
+ * Обратный расчёт: задано Tx2, Tx1 зафиксирована — найти Gx.
+ */
+export function solveGxFromTx2(
+  Tx2: number,
+  Tx1: number,
+  Tg1: number,
+  _Gg: number
+): number {
+  if (Tx2 <= Tx1) return 0.5;
+  const K = FK / 2;
+  const Q = K * (Tg1 - Tx1);
+  const mx = Q / (C * 1000 * (Tx2 - Tx1));
+  const Gx = (mx * 3600) / RHO;
+  return Math.max(0.5, Math.min(20, Math.round(Gx * 10) / 10));
+}
+
+/** Обратный расчёт: Tg1 не зафиксирована — задано Tg2, найти Tg1. */
 export function solveTg1FromTg2(
   Tg2: number,
   Gg: number,
@@ -72,20 +104,16 @@ export function solveTg1FromTg2(
   return Math.max(0, Math.min(100, Math.round(Tg1 * 10) / 10));
 }
 
-/**
- * Обратный расчёт: задано Tx2, найти Tx1.
- */
+/** Обратный расчёт: Tx1 не зафиксирована — задано Tx2, найти Tx1. */
 export function solveTx1FromTx2(
   Tx2: number,
   Tg1: number,
-  Gg: number,
+  _Gg: number,
   Gx: number
 ): number {
-  const GgSafe = Math.max(Gg, 0.01);
   const GxSafe = Math.max(Gx, 0.01);
-  const mg = (GgSafe * RHO) / 3600;
   const mx = (GxSafe * RHO) / 3600;
-  const K = Math.min(mg * C * 1000, FK / 2);
+  const K = Math.min(FK / 2, mx * C * 1000);
   const d = K / (mx * C * 1000);
   if (d >= 1) return Tx2;
   const Tx1 = (Tx2 - Tg1 * d) / (1 - d);

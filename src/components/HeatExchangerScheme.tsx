@@ -50,7 +50,8 @@ export function HeatExchangerScheme({
     { d: `M ${ex.x + ex.w} ${yBottom} L ${vb.w} ${yBottom}`, color: SUPPLY_COLOR },
   ];
 
-  const heatExchangerSrc = `${import.meta.env.BASE_URL}heat-exchanger.png`;
+  const stubW = 14;
+  const stubH = 24;
 
   return (
     <div className="relative w-full max-w-3xl mx-auto bg-slate-800 rounded-xl border border-slate-600 shadow-lg overflow-hidden">
@@ -77,23 +78,71 @@ export function HeatExchangerScheme({
             />
           </g>
         ))}
-      </svg>
 
-      <div
-        className="absolute pointer-events-none flex items-center justify-center"
-        style={{
-          left: '40.4%',
-          top: '23.3%',
-          width: '19.2%',
-          height: '53.3%',
-        }}
-      >
-        <img
-          src={heatExchangerSrc}
-          alt="Пластинчатый теплообменник"
-          className="w-full h-full object-contain drop-shadow-lg"
+        {/* Теплообменник по референсу: синий корпус, пластины, патрубки на линиях труб */}
+        <rect
+          x={ex.x}
+          y={ex.y}
+          width={ex.w}
+          height={ex.h}
+          rx={4}
+          fill="#2563eb"
+          stroke="#1d4ed8"
+          strokeWidth={2}
         />
-      </div>
+        {Array.from({ length: 28 }, (_, i) => (
+          <line
+            key={i}
+            x1={ex.x + 6 + i * 3.1}
+            y1={ex.y + 4}
+            x2={ex.x + 6 + i * 3.1}
+            y2={ex.y + ex.h - 4}
+            stroke="#93c5fd"
+            strokeWidth={1.2}
+          />
+        ))}
+        {/* Патрубки на концах труб — совпадают с подающими линиями */}
+        <rect
+          x={ex.x - stubW / 2}
+          y={yTop - stubH / 2}
+          width={stubW}
+          height={stubH}
+          rx={3}
+          fill="#94a3b8"
+          stroke="#64748b"
+          strokeWidth={1}
+        />
+        <rect
+          x={ex.x - stubW / 2}
+          y={yBottom - stubH / 2}
+          width={stubW}
+          height={stubH}
+          rx={3}
+          fill="#94a3b8"
+          stroke="#64748b"
+          strokeWidth={1}
+        />
+        <rect
+          x={ex.x + ex.w - stubW / 2}
+          y={yTop - stubH / 2}
+          width={stubW}
+          height={stubH}
+          rx={3}
+          fill="#94a3b8"
+          stroke="#64748b"
+          strokeWidth={1}
+        />
+        <rect
+          x={ex.x + ex.w - stubW / 2}
+          y={yBottom - stubH / 2}
+          width={stubW}
+          height={stubH}
+          rx={3}
+          fill="#94a3b8"
+          stroke="#64748b"
+          strokeWidth={1}
+        />
+      </svg>
 
       <div
         className={`absolute left-1/2 top-3 -translate-x-1/2 ${valueBoxCls}`}
