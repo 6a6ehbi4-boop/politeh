@@ -25,3 +25,5 @@ export interface HeatExchangerResults {
   /** Упрощённый коэффициент запаса (доля от макс. мощности) */
   reserve: number;
 }
+
+export type ConstantKeys = keyof HeatExchangerInputs;
