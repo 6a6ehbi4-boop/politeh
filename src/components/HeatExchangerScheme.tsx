@@ -50,9 +50,6 @@ export function HeatExchangerScheme({
     { d: `M ${ex.x + ex.w} ${yBottom} L ${vb.w} ${yBottom}`, color: SUPPLY_COLOR },
   ];
 
-  const stubW = 14;
-  const stubH = 24;
-
   return (
     <div className="relative w-full max-w-3xl mx-auto bg-slate-800 rounded-xl border border-slate-600 shadow-lg overflow-hidden">
       <svg viewBox={`0 0 ${vb.w} ${vb.h}`} className="w-full h-auto" fill="none">
@@ -79,69 +76,72 @@ export function HeatExchangerScheme({
           </g>
         ))}
 
-        {/* Теплообменник по референсу: синий корпус, пластины, патрубки на линиях труб */}
-        <rect
-          x={ex.x}
-          y={ex.y}
-          width={ex.w}
-          height={ex.h}
-          rx={4}
-          fill="#2563eb"
-          stroke="#1d4ed8"
-          strokeWidth={2}
-        />
-        {Array.from({ length: 28 }, (_, i) => (
-          <line
-            key={i}
-            x1={ex.x + 6 + i * 3.1}
-            y1={ex.y + 4}
-            x2={ex.x + 6 + i * 3.1}
-            y2={ex.y + ex.h - 4}
-            stroke="#93c5fd"
-            strokeWidth={1.2}
+        {/* Пластинчатый теплообменник: синяя рама с двойной обводкой, пластины с рифлёной текстурой, патрубки с буртиками, стяжные шпильки */}
+        <g id="heat-exchanger">
+          {/* Двойная обводка рамы */}
+          <rect
+            x={ex.x}
+            y={ex.y}
+            width={ex.w}
+            height={ex.h}
+            rx={3}
+            fill="none"
+            stroke="#1d4ed8"
+            strokeWidth={3}
           />
-        ))}
-        {/* Патрубки на концах труб — совпадают с подающими линиями */}
-        <rect
-          x={ex.x - stubW / 2}
-          y={yTop - stubH / 2}
-          width={stubW}
-          height={stubH}
-          rx={3}
-          fill="#94a3b8"
-          stroke="#64748b"
-          strokeWidth={1}
-        />
-        <rect
-          x={ex.x - stubW / 2}
-          y={yBottom - stubH / 2}
-          width={stubW}
-          height={stubH}
-          rx={3}
-          fill="#94a3b8"
-          stroke="#64748b"
-          strokeWidth={1}
-        />
-        <rect
-          x={ex.x + ex.w - stubW / 2}
-          y={yTop - stubH / 2}
-          width={stubW}
-          height={stubH}
-          rx={3}
-          fill="#94a3b8"
-          stroke="#64748b"
-          strokeWidth={1}
-        />
-        <rect
-          x={ex.x + ex.w - stubW / 2}
-          y={yBottom - stubH / 2}
-          width={stubW}
-          height={stubH}
-          rx={3}
-          fill="#94a3b8"
-          stroke="#64748b"
-          strokeWidth={1}
-        />
+          <rect
+            x={ex.x + 2}
+            y={ex.y + 2}
+            width={ex.w - 4}
+            height={ex.h - 4}
+            rx={2}
+            fill="#2563eb"
+            stroke="#3b82f6"
+            strokeWidth={1}
+          />
+          {/* Пакет пластин с рифлёной текстурой (чередование светло-серых полос) */}
+          {Array.from({ length: 32 }, (_, i) => (
+            <line
+              key={i}
+              x1={ex.x + 8 + i * 2.7}
+              y1={ex.y + 6}
+              x2={ex.x + 8 + i * 2.7}
+              y2={ex.y + ex.h - 6}
+              stroke={i % 2 === 0 ? '#cbd5e1' : '#94a3b8'}
+              strokeWidth={1}
+            />
+          ))}
+          {/* Стяжные шпильки сверху и снизу с гайками */}
+          <line
+            x1={ex.x - 6}
+            y1={ex.y + 10}
+            x2={ex.x + ex.w + 6}
+            y2={ex.y + 10}
+            stroke="#64748b"
+            strokeWidth={1.5}
+          />
+          <circle cx={ex.x - 4} cy={ex.y + 10} r={2.5} fill="#94a3b8" stroke="#64748b" strokeWidth={0.5} />
+          <circle cx={ex.x + ex.w + 4} cy={ex.y + 10} r={2.5} fill="#94a3b8" stroke="#64748b" strokeWidth={0.5} />
+          <line
+            x1={ex.x - 6}
+            y1={ex.y + ex.h - 10}
+            x2={ex.x + ex.w + 6}
+            y2={ex.y + ex.h - 10}
+            stroke="#64748b"
+            strokeWidth={1.5}
+          />
+          <circle cx={ex.x - 4} cy={ex.y + ex.h - 10} r={2.5} fill="#94a3b8" stroke="#64748b" strokeWidth={0.5} />
+          <circle cx={ex.x + ex.w + 4} cy={ex.y + ex.h - 10} r={2.5} fill="#94a3b8" stroke="#64748b" strokeWidth={0.5} />
+          {/* Патрубки с буртиками — слева и справа на 1/4 и 3/4 высоты, металлический вид */}
+          {[yTop, yBottom].map((y) => (
+            <g key={y}>
+              <rect x={ex.x - 8} y={y - 6} width={8} height={12} rx={1} fill="#94a3b8" stroke="#64748b" strokeWidth={0.5} />
+              <rect x={ex.x - 10} y={y - 8} width={3} height={16} rx={1} fill="#64748b" stroke="#475569" strokeWidth={0.5} />
+              <rect x={ex.x + ex.w} y={y - 6} width={8} height={12} rx={1} fill="#94a3b8" stroke="#64748b" strokeWidth={0.5} />
+              <rect x={ex.x + ex.w + 6} y={y - 8} width={3} height={16} rx={1} fill="#64748b" stroke="#475569" strokeWidth={0.5} />
+            </g>
+          ))}
+        </g>
       </svg>
 
       <div
