@@ -37,7 +37,9 @@ export function HeatExchangerScheme({
   const vb = { w: 520, h: 300 };
   const ex = { x: 210, y: 70, w: 100, h: 160 };
   const yTop = ex.y + ex.h / 4;
-  const yBottom = ex.y + (ex.h * 3) / 4;
+  const yBottom = ex.y + (3 * ex.h) / 4;
+  const portW = 26;
+  const portH = 14;
 
   const leftPipeWidthPct = (ex.x / vb.w) * 100;
   const rightPipeWidthPct = ((vb.w - ex.x - ex.w) / vb.w) * 100;
@@ -77,69 +79,122 @@ export function HeatExchangerScheme({
           </g>
         ))}
 
-        {/* Пластинчатый теплообменник: синяя рама с двойной обводкой, пластины с рифлёной текстурой, патрубки с буртиками, стяжные шпильки */}
-        <g id="heat-exchanger">
-          {/* Двойная обводка рамы */}
+        {/* Plate Heat Exchanger (PHE) — пластинчатый теплообменник */}
+        <g id="plate-heat-exchanger">
+          <rect
+            x={ex.x + 2}
+            y={ex.y + 2}
+            width={ex.w}
+            height={ex.h}
+            rx={6}
+            fill="rgba(0,0,0,0.10)"
+          />
           <rect
             x={ex.x}
             y={ex.y}
             width={ex.w}
             height={ex.h}
-            rx={3}
-            fill="none"
-            stroke="#1d4ed8"
-            strokeWidth={3}
+            rx={6}
+            fill="#1677FF"
+            stroke="#0B3D91"
+            strokeWidth={2}
           />
           <rect
-            x={ex.x + 2}
-            y={ex.y + 2}
-            width={ex.w - 4}
-            height={ex.h - 4}
-            rx={2}
-            fill="#2563eb"
-            stroke="#3b82f6"
+            x={ex.x + 10}
+            y={ex.y + 12}
+            width={ex.w - 20}
+            height={ex.h - 24}
+            rx={4}
+            fill="#F5F7FA"
+            stroke="#0B3D91"
+            strokeWidth={1}
+            opacity={0.95}
+          />
+          {Array.from({ length: 14 }).map((_, i) => {
+            const px = ex.x + 14 + i * ((ex.w - 28) / 13);
+            return (
+              <rect
+                key={`plate-${i}`}
+                x={px}
+                y={ex.y + 16}
+                width={2}
+                height={ex.h - 32}
+                rx={1}
+                fill={i % 2 === 0 ? '#B9C3CF' : '#AEB8C5'}
+                opacity={0.95}
+              />
+            );
+          })}
+          <rect
+            x={ex.x + 10}
+            y={ex.y + 8}
+            width={ex.w - 20}
+            height={6}
+            rx={3}
+            fill="#D6DEE8"
+            stroke="#8A95A6"
             strokeWidth={1}
           />
-          {/* Пакет пластин с рифлёной текстурой (чередование светло-серых полос) */}
-          {Array.from({ length: 32 }, (_, i) => (
-            <line
-              key={i}
-              x1={ex.x + 8 + i * 2.7}
-              y1={ex.y + 6}
-              x2={ex.x + 8 + i * 2.7}
-              y2={ex.y + ex.h - 6}
-              stroke={i % 2 === 0 ? '#cbd5e1' : '#94a3b8'}
-              strokeWidth={1}
-            />
+          <rect
+            x={ex.x + 10}
+            y={ex.y + ex.h - 14}
+            width={ex.w - 20}
+            height={6}
+            rx={3}
+            fill="#D6DEE8"
+            stroke="#8A95A6"
+            strokeWidth={1}
+          />
+          {[
+            { x: ex.x - portW, y: yTop },
+            { x: ex.x - portW, y: yBottom },
+          ].map((p, idx) => (
+            <g key={`L-port-${idx}`}>
+              <rect
+                x={p.x}
+                y={p.y - portH / 2}
+                width={portW}
+                height={portH}
+                rx={3}
+                fill="#DCE3EC"
+                stroke="#8A95A6"
+                strokeWidth={1.5}
+              />
+              <rect
+                x={p.x + portW - 6}
+                y={p.y - portH / 2 - 1}
+                width={6}
+                height={portH + 2}
+                rx={2}
+                fill="#C7D0DB"
+                opacity={0.95}
+              />
+            </g>
           ))}
-          {/* Стяжные шпильки сверху и снизу с гайками */}
-          <line
-            x1={ex.x - 6}
-            y1={ex.y + 10}
-            x2={ex.x + ex.w + 6}
-            y2={ex.y + 10}
-            stroke="#64748b"
-            strokeWidth={1.5}
-          />
-          <circle cx={ex.x - 4} cy={ex.y + 10} r={2.5} fill="#94a3b8" stroke="#64748b" strokeWidth={0.5} />
-          <circle cx={ex.x + ex.w + 4} cy={ex.y + 10} r={2.5} fill="#94a3b8" stroke="#64748b" strokeWidth={0.5} />
-          <line
-            x1={ex.x - 6}
-            y1={ex.y + ex.h - 10}
-            x2={ex.x + ex.w + 6}
-            y2={ex.y + ex.h - 10}
-            stroke="#64748b"
-            strokeWidth={1.5}
-          />
-          <circle cx={ex.x - 4} cy={ex.y + ex.h - 10} r={2.5} fill="#94a3b8" stroke="#64748b" strokeWidth={0.5} />
-          <circle cx={ex.x + ex.w + 4} cy={ex.y + ex.h - 10} r={2.5} fill="#94a3b8" stroke="#64748b" strokeWidth={0.5} />
-          {/* Патрубки с буртиками — слева и справа на 1/4 и 3/4 высоты, металлический вид */}
-          {[yTop, yBottom].map((y) => (
-            <g key={y}>
-              <rect x={ex.x - 8} y={y - 6} width={8} height={12} rx={1} fill="#94a3b8" stroke="#64748b" strokeWidth={0.5} />
-              <rect x={ex.x - 10} y={y - 8} width={3} height={16} rx={1} fill="#64748b" stroke="#475569" strokeWidth={0.5} />
-              <rect x={ex.x + ex.w} y={y - 6} width={8} height={12} rx={1} fill="#94a3b8" stroke="#64748b" strokeWidth={0.5} />
-              <rect x={ex.x + ex.w + 6} y={y - 8} width={3} height={16} rx={1} fill="#64748b" stroke="#475569" strokeWidth={0.5} />
+          {[
+            { x: ex.x + ex.w, y: yTop },
+            { x: ex.x + ex.w, y: yBottom },
+          ].map((p, idx) => (
+            <g key={`R-port-${idx}`}>
+              <rect
+                x={p.x}
+                y={p.y - portH / 2}
+                width={portW}
+                height={portH}
+                rx={3}
+                fill="#DCE3EC"
+                stroke="#8A95A6"
+                strokeWidth={1.5}
+              />
+              <rect
+                x={p.x}
+                y={p.y - portH / 2 - 1}
+                width={6}
+                height={portH + 2}
+                rx={2}
+                fill="#C7D0DB"
+                opacity={0.95}
+              />
             </g>
           ))}
         </g>
