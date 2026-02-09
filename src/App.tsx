@@ -52,7 +52,6 @@ export default function App() {
 
   const handleChange = (key: ConstantKeys, value: number) => {
     const isHeating = HEATING_KEYS.includes(key);
-    const sideKeys = isHeating ? HEATING_KEYS : COLD_KEYS;
     const otherKeys = isHeating ? COLD_KEYS : HEATING_KEYS;
 
     let next = { ...inputs, [key]: value };
