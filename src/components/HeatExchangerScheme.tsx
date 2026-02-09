@@ -43,12 +43,12 @@ export function HeatExchangerScheme({
   const rightPipeWidthPct = ((vb.w - ex.x - ex.w) / vb.w) * 100;
   const rightPipeLeftPct = ((ex.x + ex.w) / vb.w) * 100;
 
-  /* Tг1,Tx1: слева→направо; Tг2,Tx2: справа→налево */
+  /* Tг1,Tx1: слева→направо; Tг2,Tx2: справа→налево. reverse=false — анимация по пути */
   const pipePaths = [
-    { d: `M 0 ${yTop} L ${ex.x} ${yTop}`, color: SUPPLY_COLOR, reverse: false }, // Tг1: слева→направо (лев. верх)
-    { d: `M ${ex.x} ${yBottom} L 0 ${yBottom}`, color: RETURN_COLOR, reverse: true }, // Tг2: справа→налево (лев. низ)
-    { d: `M ${vb.w} ${yTop} L ${ex.x + ex.w} ${yTop}`, color: RETURN_COLOR, reverse: true }, // Tx2: справа→налево (прав. верх)
-    { d: `M ${ex.x + ex.w} ${yBottom} L ${vb.w} ${yBottom}`, color: SUPPLY_COLOR, reverse: false }, // Tx1: слева→направо (прав. низ)
+    { d: `M 0 ${yTop} L ${ex.x} ${yTop}`, color: SUPPLY_COLOR, reverse: false }, // Tг1: слева→направо
+    { d: `M ${ex.x} ${yBottom} L 0 ${yBottom}`, color: RETURN_COLOR, reverse: false }, // Tг2: справа→налево
+    { d: `M ${vb.w} ${yTop} L ${ex.x + ex.w} ${yTop}`, color: RETURN_COLOR, reverse: false }, // Tx2: справа→налево
+    { d: `M ${ex.x + ex.w} ${yBottom} L ${vb.w} ${yBottom}`, color: SUPPLY_COLOR, reverse: false }, // Tx1: слева→направо
   ];
 
   return (
