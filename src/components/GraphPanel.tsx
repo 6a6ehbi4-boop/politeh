@@ -85,7 +85,7 @@ export function GraphPanel({ inputs, xParam, points = 25 }: GraphPanelProps) {
 
 function getRange(
   param: keyof HeatExchangerInputs,
-  inputs: HeatExchangerInputs
+  _inputs: HeatExchangerInputs
 ): { min: number; max: number } {
   const ranges: Record<keyof HeatExchangerInputs, { min: number; max: number }> = {
     Tg1: { min: 50, max: 150 },
