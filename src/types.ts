@@ -27,3 +27,4 @@ export interface HeatExchangerResults {
 }
 
 export type ConstantKeys = keyof HeatExchangerInputs;
+export type ExtendedConstantKeys = ConstantKeys | 'Tg2' | 'Tx2';

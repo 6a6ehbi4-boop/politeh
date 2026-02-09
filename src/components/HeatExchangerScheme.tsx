@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import type { HeatExchangerInputs, HeatExchangerResults, ConstantKeys } from '../types';
+import type { HeatExchangerInputs, HeatExchangerResults, ConstantKeys, ExtendedConstantKeys } from '../types';
 
 const SUPPLY_COLOR = '#c00';
 const RETURN_COLOR = '#069';
@@ -19,10 +19,10 @@ const valueBoxCls =
 interface HeatExchangerSchemeProps {
   inputs: HeatExchangerInputs;
   results: HeatExchangerResults;
-  constants: Record<ConstantKeys, boolean>;
+  constants: Record<ExtendedConstantKeys, boolean>;
   onChange: (key: ConstantKeys, value: number) => void;
   onReturnTempChange: (key: 'Tg2' | 'Tx2', value: number) => void;
-  onConstantToggle: (key: ConstantKeys) => void;
+  onConstantToggle: (key: ExtendedConstantKeys) => void;
 }
 
 /** Схема ПТО: труба на всю длину, над ней — подпись, поле, ползунок, галочка. Слева: край→теплообменник, справа: теплообменник→край */
@@ -43,17 +43,18 @@ export function HeatExchangerScheme({
   const rightPipeWidthPct = ((vb.w - ex.x - ex.w) / vb.w) * 100;
   const rightPipeLeftPct = ((ex.x + ex.w) / vb.w) * 100;
 
+  /* Tг1 в теплообменник; Tг2 из теплообменника; Tx2 из теплообменника; Tx1 в теплообменник */
   const pipePaths = [
-    { d: `M 0 ${yTop} L ${ex.x} ${yTop}`, color: SUPPLY_COLOR },
-    { d: `M 0 ${yBottom} L ${ex.x} ${yBottom}`, color: RETURN_COLOR },
-    { d: `M ${ex.x + ex.w} ${yTop} L ${vb.w} ${yTop}`, color: RETURN_COLOR },
-    { d: `M ${ex.x + ex.w} ${yBottom} L ${vb.w} ${yBottom}`, color: SUPPLY_COLOR },
+    { d: `M 0 ${yTop} L ${ex.x} ${yTop}`, color: SUPPLY_COLOR, reverse: false }, // Tг1: край→ПТО
+    { d: `M ${ex.x} ${yBottom} L 0 ${yBottom}`, color: RETURN_COLOR, reverse: true }, // Tг2: ПТО→край
+    { d: `M ${ex.x + ex.w} ${yTop} L ${vb.w} ${yTop}`, color: RETURN_COLOR, reverse: false }, // Tx2: ПТО→край
+    { d: `M ${vb.w} ${yBottom} L ${ex.x + ex.w} ${yBottom}`, color: SUPPLY_COLOR, reverse: true }, // Tx1: край→ПТО
   ];
 
   return (
     <div className="relative w-full max-w-3xl mx-auto bg-slate-800 rounded-xl border border-slate-600 shadow-lg overflow-hidden">
       <svg viewBox={`0 0 ${vb.w} ${vb.h}`} className="w-full h-auto" fill="none">
-        {pipePaths.map(({ d, color }) => (
+        {pipePaths.map(({ d, color, reverse }) => (
           <g key={d}>
             <path
               d={d}
@@ -70,7 +71,7 @@ export function HeatExchangerScheme({
               strokeWidth={14}
               strokeLinecap="round"
               strokeDasharray="16 24"
-              animate={{ strokeDashoffset: [0, -40] }}
+              animate={{ strokeDashoffset: reverse ? [0, 40] : [0, -40] }}
               transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
             />
           </g>
@@ -175,7 +176,9 @@ export function HeatExchangerScheme({
         value={results.Tg2}
         returnKey="Tg2"
         returnRange={RETURN_TEMP_RANGE}
+        constants={constants}
         onReturnTempChange={onReturnTempChange}
+        onConstantToggle={onConstantToggle}
       />
       {/* Справа: теплообменник → край */}
       <PipeTempBlock
@@ -201,7 +204,9 @@ export function HeatExchangerScheme({
         value={results.Tx2}
         returnKey="Tx2"
         returnRange={RETURN_TEMP_RANGE}
+        constants={constants}
         onReturnTempChange={onReturnTempChange}
+        onConstantToggle={onConstantToggle}
       />
 
       {/* Расход Gг слева, Gх справа */}
@@ -242,9 +247,9 @@ interface PipeTempBlockProps {
   value: number;
   key_?: ConstantKeys;
   ranges?: { min: number; max: number; step: number };
-  constants?: Partial<Record<ConstantKeys, boolean>>;
+  constants?: Partial<Record<ExtendedConstantKeys, boolean>>;
   onChange?: (k: ConstantKeys, v: number) => void;
-  onConstantToggle?: (k: ConstantKeys) => void;
+  onConstantToggle?: (k: ExtendedConstantKeys) => void;
   editable?: boolean;
   returnKey?: 'Tg2' | 'Tx2';
   returnRange?: { min: number; max: number; step: number };
@@ -332,6 +337,17 @@ function PipeTempBlock({
               onChange={(e) => onReturnTempChange(returnKey, Number(e.target.value))}
               className="flex-1 min-w-0 h-1.5 rounded-full appearance-none bg-slate-600 accent-slate-400"
             />
+            {onConstantToggle && (
+              <label className="flex items-center gap-0.5 shrink-0 cursor-pointer" title="Зафиксировать">
+                <input
+                  type="checkbox"
+                  checked={Boolean(constants?.[returnKey])}
+                  onChange={() => onConstantToggle(returnKey)}
+                  className="rounded border-slate-400"
+                />
+                <span className="text-[10px] text-slate-400">конст.</span>
+              </label>
+            )}
           </>
         ) : (
           <span className={`${valueBoxCls} min-w-[3rem] text-center shrink-0`}>
