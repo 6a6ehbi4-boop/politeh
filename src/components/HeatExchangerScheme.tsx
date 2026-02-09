@@ -45,12 +45,12 @@ export function HeatExchangerScheme({
   const rightPipeWidthPct = ((vb.w - ex.x - ex.w) / vb.w) * 100;
   const rightPipeLeftPct = ((ex.x + ex.w) / vb.w) * 100;
 
-  /* Tг1,Tx1: слева→направо; Tг2,Tx2: справа→налево. reverse=false — анимация по пути */
+  /* Схема Ридан: Tг1/Tx1 сверху (входы), Tг2/Tx2 снизу (выходы). Tx1 холодная→синий, Tx2 нагретая→красный */
   const pipePaths = [
-    { d: `M 0 ${yTop} L ${ex.x} ${yTop}`, color: SUPPLY_COLOR, reverse: false }, // Tг1: слева→направо
-    { d: `M ${ex.x} ${yBottom} L 0 ${yBottom}`, color: RETURN_COLOR, reverse: false }, // Tг2: справа→налево
-    { d: `M ${vb.w} ${yTop} L ${ex.x + ex.w} ${yTop}`, color: RETURN_COLOR, reverse: false }, // Tx2: справа→налево
-    { d: `M ${ex.x + ex.w} ${yBottom} L ${vb.w} ${yBottom}`, color: SUPPLY_COLOR, reverse: false }, // Tx1: слева→направо
+    { d: `M 0 ${yTop} L ${ex.x} ${yTop}`, color: SUPPLY_COLOR, reverse: false }, // Tг1: горячая вход
+    { d: `M ${ex.x} ${yBottom} L 0 ${yBottom}`, color: RETURN_COLOR, reverse: false }, // Tг2: охлаждённая выход
+    { d: `M ${vb.w} ${yTop} L ${ex.x + ex.w} ${yTop}`, color: RETURN_COLOR, reverse: false }, // Tx1: холодная вход (справа→в ТО)
+    { d: `M ${ex.x + ex.w} ${yBottom} L ${vb.w} ${yBottom}`, color: SUPPLY_COLOR, reverse: false }, // Tx2: нагретая выход (из ТО→справа)
   ];
 
   return (
@@ -235,9 +235,9 @@ export function HeatExchangerScheme({
         onReturnTempChange={onReturnTempChange}
         onConstantToggle={onConstantToggle}
       />
-      {/* Справа: теплообменник → край */}
+      {/* Справа (как Ридан): Tx1 сверху — холодная вход, Tx2 снизу — нагретая выход */}
       <PipeTempBlock
-        pipeY={yBottom}
+        pipeY={yTop}
         pipeWidthPct={rightPipeWidthPct}
         pipeLeftPct={rightPipeLeftPct}
         svgH={vb.h}
@@ -251,7 +251,7 @@ export function HeatExchangerScheme({
         editable
       />
       <PipeTempBlock
-        pipeY={yTop}
+        pipeY={yBottom}
         pipeWidthPct={rightPipeWidthPct}
         pipeLeftPct={rightPipeLeftPct}
         svgH={vb.h}
