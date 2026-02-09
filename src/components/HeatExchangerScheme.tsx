@@ -22,7 +22,7 @@ interface HeatExchangerSchemeProps {
   onConstantToggle: (key: ConstantKeys) => void;
 }
 
-/** Схема ПТО: картинка теплообменника, трубы с анимацией (промежуток между сегментами), T над трубами + слайдер, G внизу по центру */
+/** Схема ПТО: труба на всю длину, над ней — подпись, поле, ползунок, галочка. Слева: край→теплообменник, справа: теплообменник→край */
 export function HeatExchangerScheme({
   inputs,
   results,
@@ -34,6 +34,10 @@ export function HeatExchangerScheme({
   const ex = { x: 210, y: 70, w: 100, h: 160 };
   const yTop = ex.y + ex.h / 4;
   const yBottom = ex.y + (ex.h * 3) / 4;
+
+  const leftPipeWidthPct = (ex.x / vb.w) * 100;
+  const rightPipeWidthPct = ((vb.w - ex.x - ex.w) / vb.w) * 100;
+  const rightPipeLeftPct = ((ex.x + ex.w) / vb.w) * 100;
 
   const pipePaths = [
     { d: `M 0 ${yTop} L ${ex.x} ${yTop}`, color: SUPPLY_COLOR },
@@ -47,7 +51,6 @@ export function HeatExchangerScheme({
   return (
     <div className="relative w-full max-w-3xl mx-auto bg-slate-800 rounded-xl border border-slate-600 shadow-lg overflow-hidden">
       <svg viewBox={`0 0 ${vb.w} ${vb.h}`} className="w-full h-auto" fill="none">
-        {/* Горизонтальные трубы: фон + анимация с видимым промежутком между сегментами */}
         {pipePaths.map(({ d, color }) => (
           <g key={d}>
             <path
@@ -72,7 +75,6 @@ export function HeatExchangerScheme({
         ))}
       </svg>
 
-      {/* Картинка теплообменника по центру (совмещение с концами труб) */}
       <div
         className="absolute pointer-events-none flex items-center justify-center"
         style={{
@@ -89,7 +91,6 @@ export function HeatExchangerScheme({
         />
       </div>
 
-      {/* Q сверху теплообменника */}
       <div
         className={`absolute left-1/2 top-3 -translate-x-1/2 ${valueBoxCls}`}
         style={{ width: 'fit-content' }}
@@ -97,10 +98,11 @@ export function HeatExchangerScheme({
         Q = {results.Q.toFixed(2)} кВт
       </div>
 
-      {/* Температуры над трубами: T + слайдер + конст. Без расхода — расход вынесен вниз. */}
+      {/* Слева: край → теплообменник. Блок над трубой на всю длину трубы. */}
       <PipeTempBlock
-        position="left"
         pipeY={yTop}
+        pipeWidthPct={leftPipeWidthPct}
+        pipeLeftPct={0}
         svgH={vb.h}
         label="Tг1"
         value={inputs.Tg1}
@@ -112,17 +114,20 @@ export function HeatExchangerScheme({
         editable
       />
       <PipeTempBlock
-        position="left"
         pipeY={yBottom}
+        pipeWidthPct={leftPipeWidthPct}
+        pipeLeftPct={0}
         svgH={vb.h}
         label="Tг2"
         value={results.Tg2}
         constants={constants}
         editable={false}
       />
+      {/* Справа: теплообменник → край */}
       <PipeTempBlock
-        position="right"
         pipeY={yBottom}
+        pipeWidthPct={rightPipeWidthPct}
+        pipeLeftPct={rightPipeLeftPct}
         svgH={vb.h}
         label="Tх1"
         value={inputs.Tx1}
@@ -134,8 +139,9 @@ export function HeatExchangerScheme({
         editable
       />
       <PipeTempBlock
-        position="right"
         pipeY={yTop}
+        pipeWidthPct={rightPipeWidthPct}
+        pipeLeftPct={rightPipeLeftPct}
         svgH={vb.h}
         label="Tх2"
         value={results.Tx2}
@@ -173,8 +179,9 @@ export function HeatExchangerScheme({
 }
 
 interface PipeTempBlockProps {
-  position: 'left' | 'right';
   pipeY: number;
+  pipeWidthPct: number;
+  pipeLeftPct: number;
   svgH: number;
   label: string;
   value: number;
@@ -186,9 +193,11 @@ interface PipeTempBlockProps {
   editable: boolean;
 }
 
+/** Блок над трубой: подпись, поле, ползунок на всю длину трубы, галочка. Слева: край→теплообменник, справа: теплообменник→край */
 function PipeTempBlock({
-  position,
   pipeY,
+  pipeWidthPct,
+  pipeLeftPct,
   svgH,
   label,
   value,
@@ -199,20 +208,19 @@ function PipeTempBlock({
   onConstantToggle,
   editable,
 }: PipeTempBlockProps) {
-  const xPercent = position === 'left' ? 12 : 88;
-  const topPercent = ((pipeY - 28) / svgH) * 100;
+  const topPercent = ((pipeY - 36) / svgH) * 100;
 
   return (
     <div
-      className="absolute flex flex-col items-center gap-1"
+      className="absolute flex flex-col gap-1"
       style={{
-        left: `${xPercent}%`,
+        left: `${pipeLeftPct}%`,
         top: `${topPercent}%`,
-        transform: 'translate(-50%, 0)',
+        width: `${pipeWidthPct}%`,
       }}
     >
-      <div className="flex items-center gap-1.5 flex-wrap justify-center">
-        <span className="text-xs text-slate-400">{label}</span>
+      <div className="flex flex-row items-center gap-2 w-full">
+        <span className="text-xs text-slate-400 shrink-0">{label}</span>
         {editable && key_ && ranges && onChange && onConstantToggle ? (
           <>
             <input
@@ -223,10 +231,20 @@ function PipeTempBlock({
               value={value}
               onChange={(e) => onChange(key_, Number(e.target.value) || ranges.min)}
               disabled={constants[key_]}
-              className={`${valueBoxCls} w-14 text-right`}
+              className={`${valueBoxCls} w-14 shrink-0 text-right`}
             />
-            <span className="text-xs text-slate-400">°C</span>
-            <label className="flex items-center gap-0.5 cursor-pointer" title="Зафиксировать">
+            <span className="text-xs text-slate-400 shrink-0">°C</span>
+            <input
+              type="range"
+              min={ranges.min}
+              max={ranges.max}
+              step={ranges.step}
+              value={value}
+              onChange={(e) => onChange(key_, Number(e.target.value))}
+              disabled={constants[key_]}
+              className="flex-1 min-w-0 h-1.5 rounded-full appearance-none bg-slate-600 accent-slate-400"
+            />
+            <label className="flex items-center gap-0.5 shrink-0 cursor-pointer" title="Зафиксировать">
               <input
                 type="checkbox"
                 checked={constants[key_]}
@@ -237,21 +255,11 @@ function PipeTempBlock({
             </label>
           </>
         ) : (
-          <span className={`${valueBoxCls} min-w-[3rem] text-center`}>{value.toFixed(1)} °C</span>
+          <span className={`${valueBoxCls} min-w-[3rem] text-center shrink-0`}>
+            {value.toFixed(1)} °C
+          </span>
         )}
       </div>
-      {editable && key_ && ranges && onChange && (
-        <input
-          type="range"
-          min={ranges.min}
-          max={ranges.max}
-          step={ranges.step}
-          value={value}
-          onChange={(e) => onChange(key_, Number(e.target.value))}
-          disabled={constants[key_]}
-          className="w-24 h-1.5 rounded-full appearance-none bg-slate-600 accent-slate-400"
-        />
-      )}
     </div>
   );
 }
