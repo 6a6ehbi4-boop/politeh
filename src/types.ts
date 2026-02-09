@@ -1,30 +1,16 @@
-/** Входные параметры пластинчатого теплообменника */
+/** Входные параметры — симуляция процесса, все вводятся вручную */
 export interface HeatExchangerInputs {
-  /** Температура греющей воды на входе, °C */
   Tg1: number;
-  /** Расход греющей воды, м³/ч */
-  Gg: number;
-  /** Температура нагреваемой воды на входе, °C */
+  Tg2: number;
   Tx1: number;
-  /** Расход нагреваемой воды, м³/ч */
+  Tx2: number;
+  Gg: number;
   Gx: number;
 }
 
-/** Результаты расчёта ПТО */
+/** Результат: Q по тепловому балансу греющего контура */
 export interface HeatExchangerResults {
-  /** Температура греющей воды на выходе, °C */
-  Tg2: number;
-  /** Температура нагреваемой воды на выходе, °C */
-  Tx2: number;
-  /** Тепловая мощность, кВт */
   Q: number;
-  /** Перепад температур в греющем контуре, °C */
-  deltaTg: number;
-  /** Перепад температур в нагреваемом контуре, °C */
-  deltaTx: number;
-  /** Упрощённый коэффициент запаса (доля от макс. мощности) */
-  reserve: number;
 }
 
-export type ConstantKeys = keyof HeatExchangerInputs;
-export type ExtendedConstantKeys = ConstantKeys | 'Tg2' | 'Tx2';
+export type InputKeys = keyof HeatExchangerInputs;
