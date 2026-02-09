@@ -6,9 +6,9 @@ const RETURN_COLOR = '#069';
 
 const RANGES: Record<ConstantKeys, { min: number; max: number; step: number }> = {
   Tg1: { min: 0, max: 100, step: 1 },
-  Gg: { min: 0.5, max: 20, step: 0.1 },
+  Gg: { min: 0.1, max: 20, step: 0.1 },
   Tx1: { min: 0, max: 100, step: 1 },
-  Gx: { min: 0.5, max: 20, step: 0.1 },
+  Gx: { min: 0.1, max: 20, step: 0.1 },
 };
 
 const RETURN_TEMP_RANGE = { min: 0, max: 100, step: 1 };
@@ -43,12 +43,12 @@ export function HeatExchangerScheme({
   const rightPipeWidthPct = ((vb.w - ex.x - ex.w) / vb.w) * 100;
   const rightPipeLeftPct = ((ex.x + ex.w) / vb.w) * 100;
 
-  /* Tг1 в теплообменник; Tг2 из теплообменника; Tx2 из теплообменника; Tx1 в теплообменник */
+  /* Tг1,Tx1: слева→направо; Tг2,Tx2: справа→налево */
   const pipePaths = [
-    { d: `M 0 ${yTop} L ${ex.x} ${yTop}`, color: SUPPLY_COLOR, reverse: false }, // Tг1: край→ПТО
-    { d: `M ${ex.x} ${yBottom} L 0 ${yBottom}`, color: RETURN_COLOR, reverse: true }, // Tг2: ПТО→край
-    { d: `M ${ex.x + ex.w} ${yTop} L ${vb.w} ${yTop}`, color: RETURN_COLOR, reverse: false }, // Tx2: ПТО→край
-    { d: `M ${vb.w} ${yBottom} L ${ex.x + ex.w} ${yBottom}`, color: SUPPLY_COLOR, reverse: true }, // Tx1: край→ПТО
+    { d: `M 0 ${yTop} L ${ex.x} ${yTop}`, color: SUPPLY_COLOR, reverse: false }, // Tг1: слева→направо (лев. верх)
+    { d: `M ${ex.x} ${yBottom} L 0 ${yBottom}`, color: RETURN_COLOR, reverse: true }, // Tг2: справа→налево (лев. низ)
+    { d: `M ${vb.w} ${yTop} L ${ex.x + ex.w} ${yTop}`, color: RETURN_COLOR, reverse: true }, // Tx2: справа→налево (прав. верх)
+    { d: `M ${ex.x + ex.w} ${yBottom} L ${vb.w} ${yBottom}`, color: SUPPLY_COLOR, reverse: false }, // Tx1: слева→направо (прав. низ)
   ];
 
   return (

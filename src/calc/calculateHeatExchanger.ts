@@ -63,12 +63,12 @@ export function solveGgFromTg2(
   Tx1: number,
   _Gx: number
 ): number {
-  if (Tg2 >= Tg1) return 0.5;
+  if (Tg2 >= Tg1) return 0.1;
   const K = FK / 2;
   const Q = K * (Tg1 - Tx1);
   const mg = Q / (C * 1000 * (Tg1 - Tg2));
   const Gg = (mg * 3600) / RHO;
-  return Math.max(0.5, Math.min(20, Math.round(Gg * 10) / 10));
+  return Math.max(0.1, Math.min(20, Math.round(Gg * 10) / 10));
 }
 
 /**
@@ -80,12 +80,12 @@ export function solveGxFromTx2(
   Tg1: number,
   _Gg: number
 ): number {
-  if (Tx2 <= Tx1) return 0.5;
+  if (Tx2 <= Tx1) return 0.1;
   const K = FK / 2;
   const Q = K * (Tg1 - Tx1);
   const mx = Q / (C * 1000 * (Tx2 - Tx1));
   const Gx = (mx * 3600) / RHO;
-  return Math.max(0.5, Math.min(20, Math.round(Gx * 10) / 10));
+  return Math.max(0.1, Math.min(20, Math.round(Gx * 10) / 10));
 }
 
 /** Обратный расчёт: Tg1 не зафиксирована — задано Tg2, найти Tg1. */
