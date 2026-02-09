@@ -1,104 +1,136 @@
 import { motion } from 'framer-motion';
-import { useTemperatureColor } from '../hooks/useTemperatureColor';
 import type { HeatExchangerInputs, HeatExchangerResults } from '../types';
+
+const SUPPLY_COLOR = '#c00';
+const RETURN_COLOR = '#069';
 
 interface HeatExchangerSchemeProps {
   inputs: HeatExchangerInputs;
   results: HeatExchangerResults;
 }
 
-/** Схема ПТО: центральный блок и четыре трубопровода с подписями и цветом по температуре */
+/** Схема ПТО: SVG-трубы (красная подача, синяя обратка) с анимацией потока, серые блоки значений */
 export function HeatExchangerScheme({ inputs, results }: HeatExchangerSchemeProps) {
-  const colorTg1 = useTemperatureColor(inputs.Tg1);
-  const colorTg2 = useTemperatureColor(results.Tg2);
-  const colorTx1 = useTemperatureColor(inputs.Tx1);
-  const colorTx2 = useTemperatureColor(results.Tx2);
-
   return (
-    <div className="relative w-full max-w-lg mx-auto aspect-square flex items-center justify-center bg-slate-100 rounded-xl p-4">
-      {/* Центральный блок — теплообменник (два пакета пластин) */}
-      <motion.div
-        className="absolute flex gap-1 items-center justify-center"
-        layout
+    <div className="relative w-full max-w-2xl mx-auto aspect-[4/3] flex items-center justify-center bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <svg
+        viewBox="0 0 400 320"
+        className="w-full h-full"
+        fill="none"
       >
-        <div className="w-16 h-20 bg-slate-400 rounded border-2 border-slate-600 shadow" />
-        <div className="w-16 h-20 bg-slate-500 rounded border-2 border-slate-700 shadow" />
-      </motion.div>
+        {/* Теплообменник — центральный блок с пластинами */}
+        <rect x="155" y="120" width="90" height="80" rx="4" fill="#94a3b8" stroke="#64748b" strokeWidth="2" />
+        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+          <line
+            key={i}
+            x1={165 + i * 10}
+            y1={125}
+            x2={165 + i * 10}
+            y2={195}
+            stroke="#64748b"
+            strokeWidth="1.5"
+          />
+        ))}
 
-      {/* Вход греющей среды — слева сверху */}
-      <PipeSegment
-        label="Tг1, Gг"
-        value={`${inputs.Tg1}°C`}
-        color={colorTg1}
-        position="top-left"
-        subLabel="Сеть (подача)"
-      />
-      {/* Выход греющей среды — справа сверху */}
-      <PipeSegment
-        label="Tг2"
-        value={`${results.Tg2}°C`}
-        color={colorTg2}
-        position="top-right"
-      />
-      {/* Вход нагреваемой среды — справа снизу */}
-      <PipeSegment
-        label="Tх1, Gх"
-        value={`${inputs.Tx1}°C`}
-        color={colorTx1}
-        position="bottom-right"
-        subLabel="Объект (обратка)"
-      />
-      {/* Выход нагреваемой среды — слева снизу */}
-      <PipeSegment
-        label="Tх2"
-        value={`${results.Tx2}°C`}
-        color={colorTx2}
-        position="bottom-left"
-      />
+        {/* Труба: подача греющая (слева сверху) — красная */}
+        <PipeWithFlowFixed id="pipe-tl" color={SUPPLY_COLOR} strokeWidth={12} />
+        <PipeWithFlowFixed id="pipe-tr" color={RETURN_COLOR} strokeWidth={12} />
+        <PipeWithFlowFixed id="pipe-br" color={RETURN_COLOR} strokeWidth={12} />
+        <PipeWithFlowFixed id="pipe-bl" color={SUPPLY_COLOR} strokeWidth={12} />
+      </svg>
+
+      {/* Блоки значений у труб — серый стиль, минимум текста */}
+      <ValueBox position="top-left">
+        <span className="text-slate-600 text-xs">Tг1</span>
+        <span className="font-mono text-sm text-slate-900">{inputs.Tg1} °C</span>
+        <span className="text-slate-600 text-xs">Gг</span>
+        <span className="font-mono text-sm text-slate-900">{inputs.Gg} м³/ч</span>
+      </ValueBox>
+      <ValueBox position="top-right">
+        <span className="text-slate-600 text-xs">Tг2</span>
+        <span className="font-mono text-sm text-slate-900">{results.Tg2.toFixed(1)} °C</span>
+      </ValueBox>
+      <ValueBox position="bottom-right">
+        <span className="text-slate-600 text-xs">Tх1</span>
+        <span className="font-mono text-sm text-slate-900">{inputs.Tx1} °C</span>
+        <span className="text-slate-600 text-xs">Gх</span>
+        <span className="font-mono text-sm text-slate-900">{inputs.Gx} м³/ч</span>
+      </ValueBox>
+      <ValueBox position="bottom-left">
+        <span className="text-slate-600 text-xs">Tх2</span>
+        <span className="font-mono text-sm text-slate-900">{results.Tx2.toFixed(1)} °C</span>
+        <span className="text-slate-600 text-xs">Q</span>
+        <span className="font-mono text-sm text-slate-900">{results.Q.toFixed(2)} кВт</span>
+      </ValueBox>
     </div>
   );
 }
 
-type PipePosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+const PIPE_PATHS: Record<string, string> = {
+  'pipe-tl': 'M 50 80 L 120 80 L 120 100 L 155 120',
+  'pipe-tr': 'M 245 120 L 280 100 L 280 80 L 350 80',
+  'pipe-br': 'M 350 240 L 280 240 L 280 220 L 245 200',
+  'pipe-bl': 'M 155 200 L 120 220 L 120 240 L 50 240',
+};
 
-interface PipeSegmentProps {
-  label: string;
-  value: string;
+interface PipeWithFlowProps {
+  id: string;
   color: string;
-  position: PipePosition;
-  subLabel?: string;
+  strokeWidth: number;
 }
 
-function PipeSegment({ label, value, color, position, subLabel }: PipeSegmentProps) {
-  const posClasses: Record<PipePosition, string> = {
-    'top-left': 'top-2 left-2',
-    'top-right': 'top-2 right-2',
-    'bottom-left': 'bottom-2 left-2',
-    'bottom-right': 'bottom-2 right-2',
-  };
-  const arrowClasses: Record<PipePosition, string> = {
-    'top-left': 'rotate-0',
-    'top-right': 'rotate-180',
-    'bottom-left': 'rotate-0',
-    'bottom-right': 'rotate-180',
-  };
-
+function PipeWithFlowFixed({ id, color, strokeWidth }: PipeWithFlowProps) {
+  const d = PIPE_PATHS[id];
+  if (!d) return null;
   return (
-    <motion.div
-      className={`absolute ${posClasses[position]} flex flex-col items-center`}
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.2 }}
+    <g>
+      <path
+        d={d}
+        fill="none"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity={0.4}
+      />
+      <motion.path
+        d={d}
+        fill="none"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeDasharray="12 12"
+        animate={{ strokeDashoffset: [0, -24] }}
+        transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
+      />
+    </g>
+  );
+}
+
+type BoxPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
+function ValueBox({
+  position,
+  title = '',
+  children,
+}: {
+  position: BoxPosition;
+  title?: string;
+  children: React.ReactNode;
+}) {
+  const pos: Record<BoxPosition, string> = {
+    'top-left': 'left-2 top-2',
+    'top-right': 'right-2 top-2',
+    'bottom-left': 'left-2 bottom-2',
+    'bottom-right': 'right-2 bottom-2',
+  };
+  return (
+    <div
+      className={`absolute ${pos[position]} bg-slate-100 border border-slate-200 rounded-lg px-2 py-1.5 shadow-sm flex flex-wrap items-baseline gap-x-2 gap-y-0.5`}
     >
-      <div
-        className="w-20 h-10 rounded-lg border-2 flex items-center justify-center font-mono text-sm font-semibold text-white drop-shadow transition-colors duration-300"
-        style={{ backgroundColor: color, borderColor: color }}
-      >
-        {value}
-      </div>
-      <span className="text-xs font-medium text-slate-600 mt-1">{label}</span>
-      {subLabel && <span className="text-xs text-slate-500">{subLabel}</span>}
-      <span className={`text-slate-400 ${arrowClasses[position]}`} aria-hidden>→</span>
-    </motion.div>
+      {title ? <span className="text-xs text-slate-500 w-full">{title}</span> : null}
+      {children}
+    </div>
   );
 }
