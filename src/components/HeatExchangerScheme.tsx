@@ -193,7 +193,7 @@ interface PipeTempBlockProps {
   value: number;
   key_?: ConstantKeys;
   ranges?: { min: number; max: number; step: number };
-  constants?: Record<ConstantKeys, boolean>;
+  constants?: Partial<Record<ConstantKeys, boolean>>;
   onChange?: (k: ConstantKeys, v: number) => void;
   onConstantToggle?: (k: ConstantKeys) => void;
   editable?: boolean;

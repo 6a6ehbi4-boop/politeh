@@ -61,12 +61,10 @@ export function solveTg1FromTg2(
   Tg2: number,
   Gg: number,
   Tx1: number,
-  Gx: number
+  _Gx: number
 ): number {
   const GgSafe = Math.max(Gg, 0.01);
-  const GxSafe = Math.max(Gx, 0.01);
   const mg = (GgSafe * RHO) / 3600;
-  const mx = (GxSafe * RHO) / 3600;
   const K = Math.min(mg * C * 1000, FK / 2);
   const c = K / (mg * C * 1000);
   if (c >= 1) return Tg2;
