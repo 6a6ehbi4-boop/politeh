@@ -111,7 +111,6 @@ export function HeatExchangerScheme({
       <PipeParams
         position="left"
         verticalPosition="top"
-        svgW={vb.w}
         svgH={vb.h}
         pipeY={yTop}
         tempLabel="Tг1"
@@ -130,7 +129,6 @@ export function HeatExchangerScheme({
       <PipeParams
         position="left"
         verticalPosition="bottom"
-        svgW={vb.w}
         svgH={vb.h}
         pipeY={yBottom}
         tempLabel="Tг2"
@@ -149,7 +147,6 @@ export function HeatExchangerScheme({
       <PipeParams
         position="right"
         verticalPosition="bottom"
-        svgW={vb.w}
         svgH={vb.h}
         pipeY={yBottom}
         tempLabel="Tх1"
@@ -168,7 +165,6 @@ export function HeatExchangerScheme({
       <PipeParams
         position="right"
         verticalPosition="top"
-        svgW={vb.w}
         svgH={vb.h}
         pipeY={yTop}
         tempLabel="Tх2"
@@ -189,7 +185,6 @@ export function HeatExchangerScheme({
 interface PipeParamsProps {
   position: 'left' | 'right';
   verticalPosition: 'top' | 'bottom';
-  svgW: number;
   svgH: number;
   pipeY: number;
   tempLabel: string;
@@ -209,7 +204,6 @@ interface PipeParamsProps {
 function PipeParams({
   position,
   verticalPosition,
-  svgW,
   svgH,
   pipeY,
   tempLabel,
