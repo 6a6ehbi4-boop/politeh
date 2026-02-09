@@ -52,3 +52,44 @@ export function calculateHeatExchanger(inputs: HeatExchangerInputs): HeatExchang
     reserve: Math.round(reserve * 100) / 100,
   };
 }
+
+/**
+ * Обратный расчёт: задано Tg2, найти Tg1.
+ * Tg2 = Tg1 - Q/(mg*C*1000), Q = (Tg1-Tx1)*K, K = min(mg*C*1000, FK/2).
+ */
+export function solveTg1FromTg2(
+  Tg2: number,
+  Gg: number,
+  Tx1: number,
+  Gx: number
+): number {
+  const GgSafe = Math.max(Gg, 0.01);
+  const GxSafe = Math.max(Gx, 0.01);
+  const mg = (GgSafe * RHO) / 3600;
+  const mx = (GxSafe * RHO) / 3600;
+  const K = Math.min(mg * C * 1000, FK / 2);
+  const c = K / (mg * C * 1000);
+  if (c >= 1) return Tg2;
+  const Tg1 = (Tg2 - Tx1 * c) / (1 - c);
+  return Math.max(0, Math.min(100, Math.round(Tg1 * 10) / 10));
+}
+
+/**
+ * Обратный расчёт: задано Tx2, найти Tx1.
+ */
+export function solveTx1FromTx2(
+  Tx2: number,
+  Tg1: number,
+  Gg: number,
+  Gx: number
+): number {
+  const GgSafe = Math.max(Gg, 0.01);
+  const GxSafe = Math.max(Gx, 0.01);
+  const mg = (GgSafe * RHO) / 3600;
+  const mx = (GxSafe * RHO) / 3600;
+  const K = Math.min(mg * C * 1000, FK / 2);
+  const d = K / (mx * C * 1000);
+  if (d >= 1) return Tx2;
+  const Tx1 = (Tx2 - Tg1 * d) / (1 - d);
+  return Math.max(0, Math.min(100, Math.round(Tx1 * 10) / 10));
+}

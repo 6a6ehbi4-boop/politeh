@@ -5,11 +5,13 @@ const SUPPLY_COLOR = '#c00';
 const RETURN_COLOR = '#069';
 
 const RANGES: Record<ConstantKeys, { min: number; max: number; step: number }> = {
-  Tg1: { min: 50, max: 150, step: 1 },
+  Tg1: { min: 0, max: 100, step: 1 },
   Gg: { min: 0.5, max: 20, step: 0.1 },
-  Tx1: { min: 1, max: 30, step: 1 },
+  Tx1: { min: 0, max: 100, step: 1 },
   Gx: { min: 0.5, max: 20, step: 0.1 },
 };
+
+const RETURN_TEMP_RANGE = { min: 0, max: 100, step: 1 };
 
 const valueBoxCls =
   'bg-slate-700 text-white rounded-lg px-2 py-1 font-mono text-sm shadow border border-slate-600';
@@ -19,6 +21,7 @@ interface HeatExchangerSchemeProps {
   results: HeatExchangerResults;
   constants: Record<ConstantKeys, boolean>;
   onChange: (key: ConstantKeys, value: number) => void;
+  onReturnTempChange: (key: 'Tg2' | 'Tx2', value: number) => void;
   onConstantToggle: (key: ConstantKeys) => void;
 }
 
@@ -28,6 +31,7 @@ export function HeatExchangerScheme({
   results,
   constants,
   onChange,
+  onReturnTempChange,
   onConstantToggle,
 }: HeatExchangerSchemeProps) {
   const vb = { w: 520, h: 300 };
@@ -120,8 +124,9 @@ export function HeatExchangerScheme({
         svgH={vb.h}
         label="Tг2"
         value={results.Tg2}
-        constants={constants}
-        editable={false}
+        returnKey="Tg2"
+        returnRange={RETURN_TEMP_RANGE}
+        onReturnTempChange={onReturnTempChange}
       />
       {/* Справа: теплообменник → край */}
       <PipeTempBlock
@@ -145,14 +150,13 @@ export function HeatExchangerScheme({
         svgH={vb.h}
         label="Tх2"
         value={results.Tx2}
-        constants={constants}
-        editable={false}
+        returnKey="Tx2"
+        returnRange={RETURN_TEMP_RANGE}
+        onReturnTempChange={onReturnTempChange}
       />
 
-      {/* Расходы внизу по центру: Gг и Gх */}
-      <div
-        className="absolute bottom-3 left-1/2 -translate-x-1/2 flex flex-wrap items-center justify-center gap-4 bg-slate-700/95 rounded-xl px-4 py-3 border border-slate-600 shadow"
-      >
+      {/* Расход Gг слева, Gх справа */}
+      <div className="absolute bottom-3 left-2 w-[38%] flex items-center justify-start">
         <FlowControl
           label="Gг"
           unit="м³/ч"
@@ -163,6 +167,8 @@ export function HeatExchangerScheme({
           onChange={onChange}
           onConstantToggle={onConstantToggle}
         />
+      </div>
+      <div className="absolute bottom-3 right-2 w-[38%] flex items-center justify-end">
         <FlowControl
           label="Gх"
           unit="м³/ч"
@@ -187,13 +193,16 @@ interface PipeTempBlockProps {
   value: number;
   key_?: ConstantKeys;
   ranges?: { min: number; max: number; step: number };
-  constants: Record<ConstantKeys, boolean>;
+  constants?: Record<ConstantKeys, boolean>;
   onChange?: (k: ConstantKeys, v: number) => void;
   onConstantToggle?: (k: ConstantKeys) => void;
-  editable: boolean;
+  editable?: boolean;
+  returnKey?: 'Tg2' | 'Tx2';
+  returnRange?: { min: number; max: number; step: number };
+  onReturnTempChange?: (key: 'Tg2' | 'Tx2', value: number) => void;
 }
 
-/** Блок над трубой: подпись, поле, ползунок на всю длину трубы, галочка. Слева: край→теплообменник, справа: теплообменник→край */
+/** Блок над трубой: подпись, поле, ползунок на всю длину трубы, галочка. Либо подача (editable), либо обратка (returnKey). */
 function PipeTempBlock({
   pipeY,
   pipeWidthPct,
@@ -203,12 +212,17 @@ function PipeTempBlock({
   value,
   key_,
   ranges,
-  constants,
+  constants = {},
   onChange,
   onConstantToggle,
-  editable,
+  editable = false,
+  returnKey,
+  returnRange,
+  onReturnTempChange,
 }: PipeTempBlockProps) {
   const topPercent = ((pipeY - 36) / svgH) * 100;
+
+  const isReturn = Boolean(returnKey && returnRange && onReturnTempChange);
 
   return (
     <div
@@ -254,6 +268,22 @@ function PipeTempBlock({
               <span className="text-[10px] text-slate-400">конст.</span>
             </label>
           </>
+        ) : isReturn && returnKey && returnRange && onReturnTempChange ? (
+          <>
+            <span className={`${valueBoxCls} min-w-[3rem] text-center shrink-0`}>
+              {value.toFixed(1)} °C
+            </span>
+            <span className="text-xs text-slate-400 shrink-0">°C</span>
+            <input
+              type="range"
+              min={returnRange.min}
+              max={returnRange.max}
+              step={returnRange.step}
+              value={value}
+              onChange={(e) => onReturnTempChange(returnKey, Number(e.target.value))}
+              className="flex-1 min-w-0 h-1.5 rounded-full appearance-none bg-slate-600 accent-slate-400"
+            />
+          </>
         ) : (
           <span className={`${valueBoxCls} min-w-[3rem] text-center shrink-0`}>
             {value.toFixed(1)} °C
@@ -286,7 +316,7 @@ function FlowControl({
   onConstantToggle,
 }: FlowControlProps) {
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex flex-col items-center gap-1 bg-slate-700/95 rounded-lg px-3 py-2 border border-slate-600">
       <div className="flex items-center gap-1.5">
         <span className="text-xs text-slate-400">{label}</span>
         <input
