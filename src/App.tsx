@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { HeatExchangerScheme } from './components/HeatExchangerScheme';
+import { SelectionPanel } from './components/SelectionPanel';
 import {
   calculateHeatExchanger,
   solveGgFromTg2,
@@ -95,6 +96,7 @@ export default function App() {
           onReturnTempChange={handleReturnTempChange}
           onConstantToggle={toggleConstant}
         />
+        <SelectionPanel inputs={inputs} results={results} />
       </main>
     </div>
   );
