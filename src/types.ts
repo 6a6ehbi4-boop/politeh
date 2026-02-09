@@ -14,3 +14,9 @@ export interface HeatExchangerResults {
 }
 
 export type InputKeys = keyof HeatExchangerInputs;
+export type ConstantKeys = InputKeys;
+
+/** Греющая сторона: Tg1, Tg2, Gg */
+export const HEATING_KEYS: ConstantKeys[] = ['Tg1', 'Tg2', 'Gg'];
+/** Нагреваемая сторона: Tx1, Tx2, Gx */
+export const COLD_KEYS: ConstantKeys[] = ['Tx1', 'Tx2', 'Gx'];

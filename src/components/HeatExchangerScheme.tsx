@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
-import type { HeatExchangerInputs, HeatExchangerResults, InputKeys } from '../types';
+import type { HeatExchangerInputs, HeatExchangerResults, InputKeys, ConstantKeys } from '../types';
 
 const SUPPLY_COLOR = '#c00';
 const RETURN_COLOR = '#069';
 
+const T_RANGE = { min: 0, max: 150, step: 1 };
 const G_RANGE = { min: 0.1, max: 50, step: 0.1 };
 
 const valueBoxCls =
@@ -12,13 +13,17 @@ const valueBoxCls =
 interface HeatExchangerSchemeProps {
   inputs: HeatExchangerInputs;
   results: HeatExchangerResults;
+  constants: Record<ConstantKeys, boolean>;
   onChange: (key: InputKeys, value: number) => void;
+  onConstantToggle: (key: ConstantKeys) => void;
 }
 
 export function HeatExchangerScheme({
   inputs,
   results,
+  constants,
   onChange,
+  onConstantToggle,
 }: HeatExchangerSchemeProps) {
   const vb = { w: 520, h: 300 };
   const ex = { x: 210, y: 70, w: 100, h: 160 };
@@ -93,16 +98,16 @@ export function HeatExchangerScheme({
         Q = {results.Q.toFixed(2)} кВт
       </div>
 
-      <TempInput pipeY={yTop} pipeWidthPct={leftPipeWidthPct} pipeLeftPct={0} svgH={vb.h} label="Tг1" value={inputs.Tg1} key_="Tg1" onChange={onChange} valueBoxCls={valueBoxCls} />
-      <TempInput pipeY={yBottom} pipeWidthPct={leftPipeWidthPct} pipeLeftPct={0} svgH={vb.h} label="Tг2" value={inputs.Tg2} key_="Tg2" onChange={onChange} valueBoxCls={valueBoxCls} />
-      <TempInput pipeY={yTop} pipeWidthPct={rightPipeWidthPct} pipeLeftPct={rightPipeLeftPct} svgH={vb.h} label="Tх1" value={inputs.Tx1} key_="Tx1" onChange={onChange} valueBoxCls={valueBoxCls} />
-      <TempInput pipeY={yBottom} pipeWidthPct={rightPipeWidthPct} pipeLeftPct={rightPipeLeftPct} svgH={vb.h} label="Tх2" value={inputs.Tx2} key_="Tx2" onChange={onChange} valueBoxCls={valueBoxCls} />
+      <TempInput pipeY={yTop} pipeWidthPct={leftPipeWidthPct} pipeLeftPct={0} svgH={vb.h} label="Tг1" value={inputs.Tg1} key_="Tg1" constants={constants} onChange={onChange} onConstantToggle={onConstantToggle} valueBoxCls={valueBoxCls} ranges={T_RANGE} />
+      <TempInput pipeY={yBottom} pipeWidthPct={leftPipeWidthPct} pipeLeftPct={0} svgH={vb.h} label="Tг2" value={inputs.Tg2} key_="Tg2" constants={constants} onChange={onChange} onConstantToggle={onConstantToggle} valueBoxCls={valueBoxCls} ranges={T_RANGE} />
+      <TempInput pipeY={yTop} pipeWidthPct={rightPipeWidthPct} pipeLeftPct={rightPipeLeftPct} svgH={vb.h} label="Tх1" value={inputs.Tx1} key_="Tx1" constants={constants} onChange={onChange} onConstantToggle={onConstantToggle} valueBoxCls={valueBoxCls} ranges={T_RANGE} />
+      <TempInput pipeY={yBottom} pipeWidthPct={rightPipeWidthPct} pipeLeftPct={rightPipeLeftPct} svgH={vb.h} label="Tх2" value={inputs.Tx2} key_="Tx2" constants={constants} onChange={onChange} onConstantToggle={onConstantToggle} valueBoxCls={valueBoxCls} ranges={T_RANGE} />
 
       <div className="absolute bottom-3 left-2 w-[38%] flex items-center justify-start">
-        <FlowControl label="Gг" unit="м³/ч" value={inputs.Gg} key_="Gg" onChange={onChange} valueBoxCls={valueBoxCls} />
+        <FlowControl label="Gг" unit="м³/ч" value={inputs.Gg} key_="Gg" constant={constants.Gg} onChange={onChange} onConstantToggle={onConstantToggle} valueBoxCls={valueBoxCls} range={G_RANGE} />
       </div>
       <div className="absolute bottom-3 right-2 w-[38%] flex items-center justify-end">
-        <FlowControl label="Gх" unit="м³/ч" value={inputs.Gx} key_="Gx" onChange={onChange} valueBoxCls={valueBoxCls} />
+        <FlowControl label="Gх" unit="м³/ч" value={inputs.Gx} key_="Gx" constant={constants.Gx} onChange={onChange} onConstantToggle={onConstantToggle} valueBoxCls={valueBoxCls} range={G_RANGE} />
       </div>
     </div>
   );
@@ -116,23 +121,45 @@ interface TempInputProps {
   label: string;
   value: number;
   key_: InputKeys;
+  constants: Record<ConstantKeys, boolean>;
   onChange: (k: InputKeys, v: number) => void;
+  onConstantToggle: (k: ConstantKeys) => void;
   valueBoxCls: string;
+  ranges: { min: number; max: number; step: number };
 }
 
-function TempInput({ pipeY, pipeWidthPct, pipeLeftPct, svgH, label, value, key_, onChange, valueBoxCls }: TempInputProps) {
+function TempInput({ pipeY, pipeWidthPct, pipeLeftPct, svgH, label, value, key_, constants, onChange, onConstantToggle, valueBoxCls, ranges }: TempInputProps) {
   const topPercent = ((pipeY - 36) / svgH) * 100;
+  const isConst = Boolean(constants[key_]);
   return (
     <div className="absolute flex flex-col gap-1" style={{ left: `${pipeLeftPct}%`, top: `${topPercent}%`, width: `${pipeWidthPct}%` }}>
       <div className="flex flex-row items-center gap-2 w-full">
         <span className="text-xs text-slate-400 shrink-0">{label}</span>
         <input
           type="number"
+          min={ranges.min}
+          max={ranges.max}
+          step={ranges.step}
           value={value}
-          onChange={(e) => onChange(key_, Number(e.target.value) || 0)}
-          className={`${valueBoxCls} w-16 shrink-0 text-right`}
+          onChange={(e) => onChange(key_, Number(e.target.value) || ranges.min)}
+          disabled={isConst}
+          className={`${valueBoxCls} w-14 shrink-0 text-right`}
         />
         <span className="text-xs text-slate-400 shrink-0">°C</span>
+        <input
+          type="range"
+          min={ranges.min}
+          max={ranges.max}
+          step={ranges.step}
+          value={value}
+          onChange={(e) => onChange(key_, Number(e.target.value))}
+          disabled={isConst}
+          className="flex-1 min-w-0 h-1.5 rounded-full appearance-none bg-slate-600 accent-slate-400"
+        />
+        <label className="flex items-center gap-0.5 shrink-0 cursor-pointer" title="Зафиксировать">
+          <input type="checkbox" checked={isConst} onChange={() => onConstantToggle(key_)} className="rounded border-slate-400" />
+          <span className="text-[10px] text-slate-400">конст.</span>
+        </label>
       </div>
     </div>
   );
@@ -143,33 +170,42 @@ interface FlowControlProps {
   unit: string;
   value: number;
   key_: InputKeys;
+  constant: boolean;
   onChange: (k: InputKeys, v: number) => void;
+  onConstantToggle: (k: ConstantKeys) => void;
   valueBoxCls: string;
+  range: { min: number; max: number; step: number };
 }
 
-function FlowControl({ label, unit, value, key_, onChange, valueBoxCls }: FlowControlProps) {
+function FlowControl({ label, unit, value, key_, constant, onChange, onConstantToggle, valueBoxCls, range }: FlowControlProps) {
   return (
     <div className="flex flex-col items-center gap-1 bg-slate-700/95 rounded-lg px-3 py-2 border border-slate-600">
       <div className="flex items-center gap-1.5">
         <span className="text-xs text-slate-400">{label}</span>
         <input
           type="number"
-          min={G_RANGE.min}
-          max={G_RANGE.max}
-          step={G_RANGE.step}
+          min={range.min}
+          max={range.max}
+          step={range.step}
           value={value}
-          onChange={(e) => onChange(key_, Number(e.target.value) || G_RANGE.min)}
+          onChange={(e) => onChange(key_, Number(e.target.value) || range.min)}
+          disabled={constant}
           className={`${valueBoxCls} w-16 text-right`}
         />
         <span className="text-xs text-slate-400">{unit}</span>
+        <label className="flex items-center gap-0.5 cursor-pointer" title="Зафиксировать">
+          <input type="checkbox" checked={constant} onChange={() => onConstantToggle(key_)} className="rounded border-slate-400" />
+          <span className="text-[10px] text-slate-400">конст.</span>
+        </label>
       </div>
       <input
         type="range"
-        min={G_RANGE.min}
-        max={G_RANGE.max}
-        step={G_RANGE.step}
+        min={range.min}
+        max={range.max}
+        step={range.step}
         value={value}
         onChange={(e) => onChange(key_, Number(e.target.value))}
+        disabled={constant}
         className="w-32 h-2 rounded-full appearance-none bg-slate-600 accent-slate-400"
       />
     </div>
